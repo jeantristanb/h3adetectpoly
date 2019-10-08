@@ -255,7 +255,7 @@ process ComputeStatBWALocal{
      """
 }
 
-bwalocal_col_ch=bwalocal_out_ch.collect()
+
 
 process ComputeStatBowtieLocal{
    input :
@@ -280,6 +280,7 @@ process ComputeStatBWA{
      out=bambase+"_bwa.stat"
      """
      extract_seqpoly_real.py --sam $bwaout --out $out --repet ${params.polyrep} --minnbrepet  ${params.reppoly_min} --maxnbrepet ${params.reppoly_max} --nb_bp_threshold ${params.nb_bp_threshold}
+     ExtractAllele_V2.r --file $out --out $bambase --header $bambase 
      """
 }
 

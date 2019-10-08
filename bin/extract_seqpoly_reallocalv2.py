@@ -126,7 +126,7 @@ for line in readsam2 :
 
 Common=intersect(dicseqend.keys(), dicseqbegin.keys())
 Write=open(args.out, 'w')
-Head=['SeqName','FlagSamBeg', 'PosInRefBeg','CigarBeg', 'FlagSamEnd', 'PosInRefEnd','CigarEnd', 'NbRep', 'ScoreNewAl','NbRepetNewAl','Seq']
+Head=['SeqName','FlagSamBeg', 'PosInRefBeg','CigarBeg', 'FlagSamEnd', 'PosInRefEnd','CigarEnd', 'NbRepetI', 'ScoreNewAl','NbRepetNewAl','Seq']
 Write.write("\t".join(Head)+'\n')
 for PeName in Common :
     pebegin=dicseqbegin[PeName]

@@ -60,7 +60,7 @@ readsam=open(args.sam)
 Write=open(args.out, 'w')
 around=args.nb_bp_threshold
 
-Head=['SeqName','NbRepRef', 'BegPolyRef', 'EndPolyRef', 'BegSeqRef', 'EndSeqRef', 'Cigar', 'FlagSam', 'ScoreNewAl','NbRepetNewAl','Seq']
+Head=['SeqName','NbRepetI', 'BegPolyRef', 'EndPolyRef', 'BegSeqRef', 'EndSeqRef', 'Cigar', 'FlagSam', 'ScoreNewAl','NbRepetNewAl','Seq']
 Write.write("\t".join(Head)+'\n')
 for line in readsam :
     if line[0]=='@':
