@@ -247,11 +247,16 @@ process ComputeStatBWALocal{
      set val(bambase), file(bwalocalbeg), file(bwalocalend) from bwalocal_out_ch
   publishDir "${params.out_dir}/stats/bwalocal", overwrite:true, mode:'copy'
    output :
-      file(out) into stat_bwa_local
+      file(filedistbwaloc)
+      set val(bambase), file(outresume) into stat_bwalocal
+      set val(bambase),file(out) into stat_bwalocal_merge
   script :
      out=bambase+"_bwalocal.stat"
+     outresume=bambase+"_bwalocal_resume.stat"
+     filedistbwaloc=bambase+"_bwalocal.svg"
      """
      extract_seqpoly_reallocalv2.py --sam_begin $bwalocalbeg --sam_end $bwalocalend --out $out --oldpos_poly ${params.around_al2} --nb_bp_threshold ${params.nb_bp_threshold}  --repet ${params.polyrep} --minnbrepet ${params.reppoly_min} --maxnbrepet ${params.reppoly_max}
+     ExtractAllele_V2.r --file $out --out $bambase"_bwalocal" --header $bambase
      """
 }
 
@@ -262,11 +267,16 @@ process ComputeStatBowtieLocal{
        set val(bambase), file(bowtielocalbeg), file(bowtielocalend) from bowtielocal_out_ch
         publishDir "${params.out_dir}/stats/bowtielocal", overwrite:true, mode:'copy'
    output :
-       set val(bambase),file(out) into stat_bowtie_local
+      file(filedistbowtieloc)
+      set val(bambase), file(outresume) into stat_bowtielocal
+      set val(bambase),file(out) into stat_bowtielocal_merge
    script :
        out=bambase+"_bowtielocal.stat"
+     outresume=bambase+"_bowtielocal_resume.stat"
+     filedistbowtieloc=bambase+"_bowtielocal.svg"
        """
        extract_seqpoly_reallocalv2.py --sam_begin $bowtielocalbeg --sam_end $bowtielocalend --out $out --oldpos_poly ${params.around_al2} --nb_bp_threshold ${params.nb_bp_threshold}  --repet ${params.polyrep} --minnbrepet ${params.reppoly_min} --maxnbrepet ${params.reppoly_max}
+     ExtractAllele_V2.r --file $out --out $bambase"_bowtielocal" --header $bambase
        """
 }
 
@@ -275,12 +285,16 @@ process ComputeStatBWA{
      set val(bambase), file(bwaout) from bwa_out_ch
   publishDir "${params.out_dir}/stats/bwa", overwrite:true, mode:'copy'
    output :
-      set val(bambase),file(out) into stat_bwa
+      file(filedistbwa)
+      set val(bambase), file(outresume) into stat_bwa
+      set val(bambase),file(out) into stat_bwa_merge
   script :
      out=bambase+"_bwa.stat"
+     outresume=bambase+"_bwa_resume.stat"
+     filedistbwa=bambase+"_bwa.svg"
      """
      extract_seqpoly_real.py --sam $bwaout --out $out --repet ${params.polyrep} --minnbrepet  ${params.reppoly_min} --maxnbrepet ${params.reppoly_max} --nb_bp_threshold ${params.nb_bp_threshold}
-     ExtractAllele_V2.r --file $out --out $bambase --header $bambase 
+     ExtractAllele_V2.r --file $out --out $bambase"_bwa" --header $bambase
      """
 }
 
@@ -290,14 +304,119 @@ process ComputeStatBowtie{
      set val(bambase), file(bowtieout) from bowtie_out_ch
   publishDir "${params.out_dir}/stats/bowtie", overwrite:true, mode:'copy'
    output :
-      set val(bambase),file(out) into stat_bowtie
+      file(filedistbowtie)
+      set val(bambase), file(outresume) into stat_bowtie
+      set val(bambase),file(out) into stat_bowtie_merge
   script :
      out=bambase+"_bowtie.stat"
+     outresume=bambase+"_bowtie_resume.stat"
+     filedistbowtie=bambase+"_bowtie.svg"
      """
      extract_seqpoly_real.py --sam $bowtieout --out $out --repet ${params.polyrep} --minnbrepet  ${params.reppoly_min} --maxnbrepet ${params.reppoly_max} --nb_bp_threshold ${params.nb_bp_threshold}
+     ExtractAllele_V2.r --file $out --out $bambase"_bowtie" --header $bambase
      """
+}
+join_res=stat_bowtie_merge.join(stat_bowtielocal_merge).join(stat_bwa_merge).join(stat_bwalocal_merge)
+process ComputeStatAll{
+   input :
+      set val(bambase), file(bowtie), file(bowtieloc), file(bwa), file(bwalocal) from join_res
+  publishDir "${params.out_dir}/stats/all", overwrite:true, mode:'copy'
+   output :
+      file(filedistall) 
+      file(outresume) into stat_all
+      set val(bambase),file(out) into stat_all_merge
+   script :
+     out=bambase+"_all.stat"
+     outresume=bambase+"_all_resume.stat"
+     filedistall=bambase+"_all.svg"
+      """
+     merge_multires.py --listfile $bwalocal,$bwa,$bowtie,$bowtieloc --out $out
+     ExtractAllele_V2.r --file $out --out $bambase"_all" --header $bambase --lheader NbRepetNewAl
+      """
+}
+
+stat_all_col=stat_all.collect()
+
+process MergeStatAll{
+    input :
+        file(statmerge) from stat_all_col
+    publishDir "${params.out_dir}/stats", overwrite:true, mode:'copy'
+    output :
+      file(out) into merge_all
+    script :
+      mergestat=statmerge.join(" ")
+      out="resume.all"
+      """
+      head -1 ${statmerge[0]} > $out
+      tail -q -n 1 $mergestat >> $out
+      """
+}
+
+stat_bwa_col=stat_bwa.collect()
+process MergeStatBWA{
+    input :
+        file(statmerge) from stat_bwa_col
+    publishDir "${params.out_dir}/stats", overwrite:true, mode:'copy'
+    output :
+      file(out) into merge_bwa
+    script :
+      mergestat=statmerge.join(" ")
+      out="resume.bwa"
+      """
+      head -1 ${statmerge[0]} > $out
+      tail -q -n 1 $mergestat >> $out
+      """
+}
+
+stat_bowtielocal_col=stat_bowtielocal.collect()
+process MergeStatBowtieLocal{
+    input :
+        file(statmerge) from stat_bowtielocal_col
+    publishDir "${params.out_dir}/stats", overwrite:true, mode:'copy'
+    output :
+      file(out) into merge_bowtieloc
+    script :
+      mergestat=statmerge.join(" ")
+      out="resume.bowtielocal"
+      """
+      head -1 ${statmerge[0]} > $out
+      tail -q -n 1 $mergestat >> $out
+      """
 }
 
 
+stat_bwalocal_col=stat_bwalocal.collect()
+process MergeStatBWALocal{
+    input :
+        file(statmerge) from stat_bwalocal_col
+    publishDir "${params.out_dir}/stats", overwrite:true, mode:'copy'
+    output :
+      file(out) into merge_BWALoc
+    script :
+      mergestat=statmerge.join(" ")
+      out="resume.bwalocal"
+      """
+      head -1 ${statmerge[0]} > $out
+      tail -q -n 1 $mergestat >> $out
+      """
+}
+
+
+
+stat_bowtie_col=stat_bowtie.collect()
+process MergeStatBowtie{
+    input :
+        file(statmerge) from stat_bowtie_col
+    publishDir "${params.out_dir}/stats", overwrite:true, mode:'copy'
+    output :
+      file(out) into merge_bowtie
+    script :
+      mergestat=statmerge.join(" ")
+      out="resume.bowtie"
+      """
+      head -1 ${statmerge[0]} > $out
+      tail -q -n 1 $mergestat >> $out
+      """
+}
 
 
