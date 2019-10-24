@@ -127,6 +127,20 @@ This report gives a brief overview of the run of the detection of poly element i
 EOL = chr(10)
 
 
+images = "${workflow.container}"
+if images=="[:]":
+   pdict["dockerimages"] = ": locally installed binaries used"
+else:
+   images = getImages("${workflow.container}")
+   pdict["dockerimages"] = ": the docker images used are found in "+images
+
+
+template = template % pdict
+
+
+
+template=template.replace("*-",chr(92)).replace("##",chr(36)).replace("@.@",chr(10))
+
 g=open(out,"w")
 g.write(template)
 g.close()
