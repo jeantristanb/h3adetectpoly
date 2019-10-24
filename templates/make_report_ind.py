@@ -78,5 +78,62 @@ if len(sys.argv)<=1:
 
 Individu  = args.indname
 out    = args.out
+template='''
+*-documentclass[11pt]{article}
+
+*-usepackage[paper=a4paper,left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
+*-usepackage{graphicx}
+*-usepackage{subfig}
+*-usepackage{listings}
+*-usepackage{longtable}
+*-usepackage{array}
+*-usepackage{booktabs}
+*-usepackage{float}
+*-usepackage{dcolumn}
+*-floatstyle{ruled}
+*-restylefloat{figure}
+*-restylefloat{table}
+*-newcommand{*-lefttblcol}{*-raggedright*-hspace{0pt}}
+*-newcommand{*-righttblcol}{*-raggedleft*-hspace{0pt}}
+*-newcommand{*-centretblcol}{*-centering*-hspace{0pt}}
+
+*-newcolumntype{P}[1]{>{*-lefttblcol}p{#1}}
+*-newcolumntype{Q}[1]{>{*-righttblcol}p{#1}}
+*-newcolumntype{R}[1]{>{*-centretblcol}p{#1}}
+*-lstset{
+basicstyle=*-small*-ttfamily,
+columns=flexible,
+breaklines=true
+}
+*-usepackage{url}
+*-title{Association Testing  %(base)s : %(pheno)s}
+*-date{%(date)s}
+'''+dateheader+('''
+*-author{SBIMB : detection of Poly element }
+
+*-newcommand{*-ourfig}[3]{*-begin{figure}[ht]*-begin{center}*-includegraphics[scale=0.6]{#3} *-end{center} *-caption{#2 [File is *-protect*-url{#3}]}  *-label{#1}*-end{figure}}
+*-begin{document}
+
+*-maketitle
+
+*-section{Introduction}
+
+This report gives a brief overview of the run of the detection of poly element in genomes
+*-begin{itemize}
+*-item You were testing for the following individus %s 
+*-end{itemize}
+'''%Individu)
+
+EOL = chr(10)
+
+
+g=open(out,"w")
+g.write(template)
+g.close()
+
+os.system("pdflatex %s >& /dev/null"%out)
+os.system("pdflatex %s"%out)
+
+
 
 
