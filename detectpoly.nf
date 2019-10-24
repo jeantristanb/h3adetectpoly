@@ -247,7 +247,8 @@ process ComputeStatBWALocal{
      set val(bambase), file(bwalocalbeg), file(bwalocalend) from bwalocal_out_ch
   publishDir "${params.out_dir}/stats/bwalocal", overwrite:true, mode:'copy'
    output :
-      file(filedistbwaloc)
+      set val(bambase),file(filedistbwalocal) into fig_bwalocal
+      file(outresume) into (stat_bwalocal, stat_bwalocal2)
       file(outresume) into stat_bwalocal
       set val(bambase),file(out) into stat_bwalocal_merge
   script :
@@ -267,7 +268,8 @@ process ComputeStatBowtieLocal{
        set val(bambase), file(bowtielocalbeg), file(bowtielocalend) from bowtielocal_out_ch
         publishDir "${params.out_dir}/stats/bowtielocal", overwrite:true, mode:'copy'
    output :
-      file(filedistbowtieloc)
+      set val(bambase),file(filedistbowtielocal) into fig_bowtielocal
+      file(outresume) into (stat_bowtielocal, stat_bowtielocal2)
       file(outresume) into stat_bowtielocal
       set val(bambase),file(out) into stat_bowtielocal_merge
    script :
@@ -285,8 +287,8 @@ process ComputeStatBWA{
      set val(bambase), file(bwaout) from bwa_out_ch
   publishDir "${params.out_dir}/stats/bwa", overwrite:true, mode:'copy'
    output :
-      file(filedistbwa)
-      file(outresume) into stat_bwa
+      set val(bambase),file(filedistbwa) into fig_bwa
+      file(outresume) into (stat_bwa, stat_bwa2)
       set val(bambase),file(out) into stat_bwa_merge
   script :
      out=bambase+"_bwa.stat"
@@ -304,8 +306,8 @@ process ComputeStatBowtie{
      set val(bambase), file(bowtieout) from bowtie_out_ch
   publishDir "${params.out_dir}/stats/bowtie", overwrite:true, mode:'copy'
    output :
-      file(filedistbowtie)
-      file(outresume) into stat_bowtie
+      set val(bambase),file(filedistbowtie) into fig_bowtie
+      file(outresume) into (stat_bowtie, stat_bowtie2)
       set val(bambase),file(out) into stat_bowtie_merge
   script :
      out=bambase+"_bowtie.stat"
@@ -322,7 +324,8 @@ process ComputeStatAll{
       set val(bambase), file(bowtie), file(bowtieloc), file(bwa), file(bwalocal) from join_res
   publishDir "${params.out_dir}/stats/all", overwrite:true, mode:'copy'
    output :
-      file(filedistall) 
+      set val(bambase),file(filedistall) into fig_all
+      file(outresume) into (stat_all, stat_all2)
       file(outresume) into stat_all
       set val(bambase),file(out) into stat_all_merge
    script :
@@ -411,6 +414,26 @@ process MergeStatBowtie{
       """
       mergefile.py $mergestat > $out
       """
+}
+
+process DoReportInd{
+   input :
+       set val(bambasebwa), file(figbwa) from fig_bwa 
+       file(stat) from stat_bwa2 
+       set val(bambasebwalocal), file(figbwalocal) from fig_bwalocal 
+       file(stat) from stat_bwalocal2 
+       set val(bambasebowtie), file(figbowtie) from fig_bowtie 
+       file(stat) from stat_bowtie2 
+       set val(bambasebowtielocal), file(figbowtielocal) from fig_bowtielocal 
+       file(stat) from stat_bowtielocal2 
+       set val(bambaseall), file(figall) from fig_all 
+       file(stat) from stat_bowtielocal2 
+       set val(bambaseall), file(figall) from fig_all 
+       file(stat) from stat_bowtielocal2 
+   script :
+     """
+     """
+  
 }
 
 
