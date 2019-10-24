@@ -248,7 +248,7 @@ process ComputeStatBWALocal{
   publishDir "${params.out_dir}/stats/bwalocal", overwrite:true, mode:'copy'
    output :
       file(filedistbwaloc)
-      set val(bambase), file(outresume) into stat_bwalocal
+      file(outresume) into stat_bwalocal
       set val(bambase),file(out) into stat_bwalocal_merge
   script :
      out=bambase+"_bwalocal.stat"
@@ -268,7 +268,7 @@ process ComputeStatBowtieLocal{
         publishDir "${params.out_dir}/stats/bowtielocal", overwrite:true, mode:'copy'
    output :
       file(filedistbowtieloc)
-      set val(bambase), file(outresume) into stat_bowtielocal
+      file(outresume) into stat_bowtielocal
       set val(bambase),file(out) into stat_bowtielocal_merge
    script :
        out=bambase+"_bowtielocal.stat"
@@ -286,7 +286,7 @@ process ComputeStatBWA{
   publishDir "${params.out_dir}/stats/bwa", overwrite:true, mode:'copy'
    output :
       file(filedistbwa)
-      set val(bambase), file(outresume) into stat_bwa
+      file(outresume) into stat_bwa
       set val(bambase),file(out) into stat_bwa_merge
   script :
      out=bambase+"_bwa.stat"
@@ -305,7 +305,7 @@ process ComputeStatBowtie{
   publishDir "${params.out_dir}/stats/bowtie", overwrite:true, mode:'copy'
    output :
       file(filedistbowtie)
-      set val(bambase), file(outresume) into stat_bowtie
+      file(outresume) into stat_bowtie
       set val(bambase),file(out) into stat_bowtie_merge
   script :
      out=bambase+"_bowtie.stat"
@@ -336,7 +336,6 @@ process ComputeStatAll{
 }
 
 stat_all_col=stat_all.collect()
-
 process MergeStatAll{
     input :
         file(statmerge) from stat_all_col
@@ -347,8 +346,7 @@ process MergeStatAll{
       mergestat=statmerge.join(" ")
       out="resume.all"
       """
-      head -1 ${statmerge[0]} > $out
-      tail -q -n 1 $mergestat >> $out
+      mergefile.py $mergestat > $out
       """
 }
 
@@ -363,8 +361,7 @@ process MergeStatBWA{
       mergestat=statmerge.join(" ")
       out="resume.bwa"
       """
-      head -1 ${statmerge[0]} > $out
-      tail -q -n 1 $mergestat >> $out
+      mergefile.py $mergestat > $out
       """
 }
 
@@ -379,8 +376,7 @@ process MergeStatBowtieLocal{
       mergestat=statmerge.join(" ")
       out="resume.bowtielocal"
       """
-      head -1 ${statmerge[0]} > $out
-      tail -q -n 1 $mergestat >> $out
+      mergefile.py $mergestat > $out
       """
 }
 
@@ -396,8 +392,7 @@ process MergeStatBWALocal{
       mergestat=statmerge.join(" ")
       out="resume.bwalocal"
       """
-      head -1 ${statmerge[0]} > $out
-      tail -q -n 1 $mergestat >> $out
+      mergefile.py $mergestat > $out
       """
 }
 
@@ -414,8 +409,7 @@ process MergeStatBowtie{
       mergestat=statmerge.join(" ")
       out="resume.bowtie"
       """
-      head -1 ${statmerge[0]} > $out
-      tail -q -n 1 $mergestat >> $out
+      mergefile.py $mergestat > $out
       """
 }
 
