@@ -29,6 +29,7 @@ def parseArguments():
     parser.add_argument('--indname',type=str,required=False, help="fasta file")
     parser.add_argument('--figures',type=str,required=True, help="fasta file")
     parser.add_argument('--filestat',type=str,required=True, help="fasta file")
+    parser.add_argument('--couv',type=str,required=True, help="fasta file")
     parser.add_argument('--out', type=str,help="out header",default="outseq", required=False)
     args = parser.parse_args()
     return args
@@ -166,14 +167,17 @@ TableRes+="*-hline\n*-end{tabular}\n}\n*-caption{resume for each alignment nb PE
 FigRes=""
 for CmtFig in range(len(listfigure)):
    Figure=listfigure[CmtFig]
-   #NewFigure=Figure.replace('.','-').replace('-svg', '.png')
-   #print('convert '+ Figure+' '+NewFigure)
-   #os.system('convert '+ Figure+' '+NewFigure)
-   FigRes+="\subsection{"+listtype[CmtFig]+"}\n"
+   FigRes+="*-subsection{"+listtype[CmtFig]+"}\n"
    FigRes+="File used for figure "+ltx(Figure)
-   FigRes+="\n*-begin{figure}[h]\n*-includegraphics[width=*-linewidth]{"+listfigure[CmtFig]+"}\n*-caption{ "+ listtype[CmtFig] + " }\n*-label{fig:"+listtype[CmtFig]+"}\n*-end{figure}\n"
+   FigRes+="\n*-begin{figure}[H]\n*-includegraphics[width=*-linewidth]{"+listfigure[CmtFig]+"}\n*-caption{ "+ listtype[CmtFig] + " }\n*-label{fig:"+listtype[CmtFig]+"}\n*-end{figure}\n"
   
 
+Couv="*-section{Depth}\n"
+Couv+="File used for figure "+ltx(args.couv)
+Couv+="\n*-begin{figure}[H]\n*-includegraphics[width=*-linewidth]{"+args.couv+"}\n*-caption{ depth along genomes }\n*-label{fig:depth}\n*-end{figure}\n"
+
+
+template+="\n*-section{depth}\n"+Couv+"\n"
 template+="\n*-section{Resume results}\n"+TableRes+"\n"
 template+="\n*-section{Figures distribution}\n"+FigRes+"\n"
 
@@ -181,6 +185,8 @@ template=template.replace("*-",chr(92)).replace("##",chr(36)).replace("@.@",chr(
 template+="\end{document}\n"
 hashd = { 'Individu':Individu.replace("_","-"), "date":check_output("date").strip()}
 template=template%hashd
+
+
 
    
 

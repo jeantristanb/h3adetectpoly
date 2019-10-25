@@ -429,7 +429,8 @@ process ComputeDepth{
       file(allbai) from list_baifile_depth
    publishDir "${params.out_dir}/depth/", overwrite:true, mode:'copy'
    output :
-      file(out)
+      file(out) into depth_all
+      file(outpdf) 
    script :
      out=params.out+".depth"
      outpdf=params.out+"_depth.pdf"
@@ -445,18 +446,20 @@ process ComputeDepth{
 
 fig_merge_process=fig_bwa.join(fig_bwalocal).join(fig_bowtie).join(fig_bowtielocal).join(fig_all)
 stat_merge_process=stat_bwa2.join(stat_bwalocal2).join(stat_bowtie2).join(stat_bowtielocal2).join(stat_all2)
-report_ind=fig_merge_process.join(stat_merge_process)
+report_ind=fig_merge_process.join(stat_merge_process).combine(depth_all)
 
 process DoReportInd{
    input :
-       set val(bambase), file(figbwa), file(figbwalocal), file(figbowtie), file(figbowtielocal), file(figall),  file(statbwa),file(statbwalocal),file(statbowtie),file(statbowtielocal) ,file(statall) from report_ind
+       set val(bambase), file(figbwa), file(figbwalocal), file(figbowtie), file(figbowtielocal), file(figall),  file(statbwa),file(statbwalocal),file(statbowtie),file(statbowtielocal) ,file(statall), file(depth_all) from report_ind
   publishDir "${params.out_dir}/report_ind", overwrite:true, mode:'copy'
    output :
-     file("${bambasebwa}.tex")
-     file("${bambasebwa}.pdf")
+     file("${bambase}.tex")
+     file("${bambase}.pdf")
    script :
+     outpdfdepth=bambase+"_depth.pdf"
      """
-     make_report_ind.py --out $bambase".tex" --order "all,bwa,bwalocal,bowtie2,bowtie2local" --indname $bambasebwa --figures $figall,$figbwa,$figbwalocal,$figbowtie,$figbowtielocal --filestat $statall,$statbwa,$statbwalocal,$statbowtie,$statbowtielocal
+     plot_couv_ind.r ${depth_all} ${params.pos_begin} ${params.pos_end} $outpdfdepth $bambase"."
+     make_report_ind.py --out $bambase".tex" --order "all,bwa,bwalocal,bowtie2,bowtie2local" --indname $bambase --figures $figall,$figbwa,$figbwalocal,$figbowtie,$figbowtielocal --filestat $statall,$statbwa,$statbwalocal,$statbowtie,$statbowtielocal --couv  $outpdfdepth
      """
 
 }
