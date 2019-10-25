@@ -6,12 +6,17 @@
 # See the "LICENSE" file for details
 
 import glob
+import argparse
 import sys
 import os
 from  subprocess import CalledProcessError
 import subprocess
 import re
 
+def ltx(x):
+   x=x.replace('_','\\_')
+   return(x)
+   
 def check_output(x,shell=False):
    ans=subprocess.check_output(x,shell=shell)
    ans=str(ans,'ascii') # encoding option only frmo python 3.6
@@ -28,6 +33,8 @@ def parseArguments():
     args = parser.parse_args()
     return args
 
+args=parseArguments()
+Individu=args.indname
 
 
 try:
@@ -91,6 +98,7 @@ template='''
 *-usepackage{float}
 *-usepackage{dcolumn}
 *-floatstyle{ruled}
+*-usepackage{grffile}
 *-restylefloat{figure}
 *-restylefloat{table}
 *-newcommand{*-lefttblcol}{*-raggedright*-hspace{0pt}}
@@ -106,7 +114,7 @@ columns=flexible,
 breaklines=true
 }
 *-usepackage{url}
-*-title{Association Testing  %(base)s : %(pheno)s}
+*-title{Poly detection of element : %(Individu)s}
 *-date{%(date)s}
 '''+dateheader+('''
 *-author{SBIMB : detection of Poly element }
@@ -126,21 +134,58 @@ This report gives a brief overview of the run of the detection of poly element i
 
 EOL = chr(10)
 
+listtype=args.order.replace(' ','').split(',')
+liststat=args.filestat.replace(' ','').split(',')
+listfigure=args.figures.replace(' ','').split(',')
 
-images = "${workflow.container}"
-if images=="[:]":
-   pdict["dockerimages"] = ": locally installed binaries used"
-else:
-   images = getImages("${workflow.container}")
-   pdict["dockerimages"] = ": the docker images used are found in "+images
+ListRes={}
+ListPosHead=[]
+for Cmt in  range(len(liststat)) :
+    Read=open(liststat[Cmt]) 
+    ListHead=Read.readline().replace('\n','').split()
+    ListInfo=Read.readline().replace('\n','').split()
+    CmtHead=0
+    for Head in ListHead :
+      if Head!="Name" and "Type" not in Head:
+        if Head not in ListRes : 
+            ListRes[Head]=['-']*len(liststat)
+            ListPosHead.append(Head)
+        ListRes[Head][Cmt]=ListInfo[CmtHead]
+      CmtHead+=1
 
 
-template = template % pdict
+### 
+TableRes="\n*-begin{table}[ht]\n*-centering\n*-resizebox{*-textwidth}{!}{\n*-begin{tabular}{ |"+"c|"*(len(ListRes)+1)+"| }"
+TableRes+="\n*-hline\nType\nAlignement & "+" & ".join([x.replace('_',' ') for x in ListPosHead]).replace('NbRepet', '')+"  *-*- \n*-hline\n"
+for Cmt in range(len(liststat)):
+   resind=[listtype[Cmt]]
+   resind+=[ListRes[Head][Cmt] for Head in ListPosHead]
+   TableRes+=" & ".join(resind)+" *-*- \n "
+TableRes+="*-hline\n*-end{tabular}\n}\n*-caption{resume for each alignment nb PE found for each Allele}\n*-end{table} \n"
 
+FigRes=""
+for CmtFig in range(len(listfigure)):
+   Figure=listfigure[CmtFig]
+   #NewFigure=Figure.replace('.','-').replace('-svg', '.png')
+   #print('convert '+ Figure+' '+NewFigure)
+   #os.system('convert '+ Figure+' '+NewFigure)
+   FigRes+="\subsection{"+listtype[CmtFig]+"}\n"
+   FigRes+="File used for figure "+ltx(Figure)
+   FigRes+="\n*-begin{figure}[h]\n*-includegraphics[width=*-linewidth]{"+listfigure[CmtFig]+"}\n*-caption{ "+ listtype[CmtFig] + " }\n*-label{fig:"+listtype[CmtFig]+"}\n*-end{figure}\n"
+  
 
+template+="\n*-section{Resume results}\n"+TableRes+"\n"
+template+="\n*-section{Figures distribution}\n"+FigRes+"\n"
 
 template=template.replace("*-",chr(92)).replace("##",chr(36)).replace("@.@",chr(10))
+template+="\end{document}\n"
+hashd = { 'Individu':Individu.replace("_","-"), "date":check_output("date").strip()}
+template=template%hashd
 
+   
+
+
+out=args.out
 g=open(out,"w")
 g.write(template)
 g.close()

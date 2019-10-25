@@ -17,7 +17,7 @@ import java.nio.file.Paths
 def helps = [ 'help' : 'help' ]
 
 allowed_params =['files_bam', 'bin_samtools', 'out_dir', 'mem_req_samtools', 'cpus_req_samtools', 'reffasta_file', 'out']
-allowed_params+=['chro', 'pos_begin', 'pos_end', 'polyrep', 'around']
+allowed_params+=['chro', 'pos_begin', 'pos_end', 'polyrep', 'around_depth']
 
 
 params.bin_samtools='samtools'
@@ -33,7 +33,7 @@ params.chro=''
 params.pos_begin=-1
 params.pos_end=-1
 params.polyrep=''
-params.around=0
+params.around_depth=0
 params.maxForks_samtools=25
 
 
@@ -79,8 +79,8 @@ process FormatStatBam{
 if(params.reffasta_file==''){
 error('no reference fasta file give see reffasta_file')
 }
-if(params.pos_begin<0 || params.pos_end<0 || params.around<0){
-error('negative values of pos_end, pos_begin or around')
+if(params.pos_begin<0 || params.pos_end<0 || params.around_depth<0){
+error('negative values of pos_end, pos_begin or around_depth')
 }
 if(params.polyrep==''){
 error('element repeted not done')
@@ -95,7 +95,7 @@ process CheckRefSeq{
    script :
    out=params.out+'.statfasta'
    """
-   extract_seq.py  --fasta $filefasta --chro ${params.chro} --posbegin ${params.pos_begin} --posend ${params.pos_end} --rep ${params.polyrep}  --around ${params.around} --check --out  $out
+   extract_seq.py  --fasta $filefasta --chro ${params.chro} --posbegin ${params.pos_begin} --posend ${params.pos_end} --rep ${params.polyrep}  --around_depth ${params.around_depth} --check --out  $out
    """
 }
 
@@ -146,7 +146,7 @@ process ComputeDepth{
    script :
      out=params.out+".depth"
      outpdf=params.out+"_depth.pdf"
-     range=params.chro+':'+(params.pos_begin-params.around)+'-'+(params.pos_end+params.around)
+     range=params.chro+':'+(params.pos_begin-params.around_depth)+'-'+(params.pos_end+params.around_depth)
      listfile=allbam.join(' ') 
      Head='Chro Pos '+allbam.join('\t').replace('bam','')
      """

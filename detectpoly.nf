@@ -43,6 +43,7 @@ params.chro=''
 params.pos_begin=-1
 params.pos_end=-1
 params.polyrep=''
+params.around_depth=500
 //nb 
 params.around=0
 params.around_al2=-1
@@ -248,13 +249,12 @@ process ComputeStatBWALocal{
   publishDir "${params.out_dir}/stats/bwalocal", overwrite:true, mode:'copy'
    output :
       set val(bambase),file(filedistbwalocal) into fig_bwalocal
-      file(outresume) into (stat_bwalocal, stat_bwalocal2)
-      file(outresume) into stat_bwalocal
+      set val(bambase),file(outresume) into (stat_bwalocal, stat_bwalocal2)
       set val(bambase),file(out) into stat_bwalocal_merge
   script :
      out=bambase+"_bwalocal.stat"
      outresume=bambase+"_bwalocal_resume.stat"
-     filedistbwaloc=bambase+"_bwalocal.svg"
+     filedistbwalocal=bambase+"_bwalocal.pdf"
      """
      extract_seqpoly_reallocalv2.py --sam_begin $bwalocalbeg --sam_end $bwalocalend --out $out --oldpos_poly ${params.around_al2} --nb_bp_threshold ${params.nb_bp_threshold}  --repet ${params.polyrep} --minnbrepet ${params.reppoly_min} --maxnbrepet ${params.reppoly_max}
      ExtractAllele_V2.r --file $out --out $bambase"_bwalocal" --header $bambase
@@ -269,13 +269,12 @@ process ComputeStatBowtieLocal{
         publishDir "${params.out_dir}/stats/bowtielocal", overwrite:true, mode:'copy'
    output :
       set val(bambase),file(filedistbowtielocal) into fig_bowtielocal
-      file(outresume) into (stat_bowtielocal, stat_bowtielocal2)
-      file(outresume) into stat_bowtielocal
+      set val(bambase), file(outresume) into (stat_bowtielocal, stat_bowtielocal2)
       set val(bambase),file(out) into stat_bowtielocal_merge
    script :
        out=bambase+"_bowtielocal.stat"
-     outresume=bambase+"_bowtielocal_resume.stat"
-     filedistbowtieloc=bambase+"_bowtielocal.svg"
+      outresume=bambase+"_bowtielocal_resume.stat"
+      filedistbowtielocal=bambase+"_bowtielocal.pdf"
        """
        extract_seqpoly_reallocalv2.py --sam_begin $bowtielocalbeg --sam_end $bowtielocalend --out $out --oldpos_poly ${params.around_al2} --nb_bp_threshold ${params.nb_bp_threshold}  --repet ${params.polyrep} --minnbrepet ${params.reppoly_min} --maxnbrepet ${params.reppoly_max}
      ExtractAllele_V2.r --file $out --out $bambase"_bowtielocal" --header $bambase
@@ -288,12 +287,12 @@ process ComputeStatBWA{
   publishDir "${params.out_dir}/stats/bwa", overwrite:true, mode:'copy'
    output :
       set val(bambase),file(filedistbwa) into fig_bwa
-      file(outresume) into (stat_bwa, stat_bwa2)
+      set val(bambase), file(outresume) into (stat_bwa, stat_bwa2)
       set val(bambase),file(out) into stat_bwa_merge
   script :
      out=bambase+"_bwa.stat"
      outresume=bambase+"_bwa_resume.stat"
-     filedistbwa=bambase+"_bwa.svg"
+     filedistbwa=bambase+"_bwa.pdf"
      """
      extract_seqpoly_real.py --sam $bwaout --out $out --repet ${params.polyrep} --minnbrepet  ${params.reppoly_min} --maxnbrepet ${params.reppoly_max} --nb_bp_threshold ${params.nb_bp_threshold}
      ExtractAllele_V2.r --file $out --out $bambase"_bwa" --header $bambase
@@ -307,12 +306,12 @@ process ComputeStatBowtie{
   publishDir "${params.out_dir}/stats/bowtie", overwrite:true, mode:'copy'
    output :
       set val(bambase),file(filedistbowtie) into fig_bowtie
-      file(outresume) into (stat_bowtie, stat_bowtie2)
+      set val(bambase), file(outresume) into (stat_bowtie, stat_bowtie2)
       set val(bambase),file(out) into stat_bowtie_merge
   script :
      out=bambase+"_bowtie.stat"
      outresume=bambase+"_bowtie_resume.stat"
-     filedistbowtie=bambase+"_bowtie.svg"
+     filedistbowtie=bambase+"_bowtie.pdf"
      """
      extract_seqpoly_real.py --sam $bowtieout --out $out --repet ${params.polyrep} --minnbrepet  ${params.reppoly_min} --maxnbrepet ${params.reppoly_max} --nb_bp_threshold ${params.nb_bp_threshold}
      ExtractAllele_V2.r --file $out --out $bambase"_bowtie" --header $bambase
@@ -325,20 +324,19 @@ process ComputeStatAll{
   publishDir "${params.out_dir}/stats/all", overwrite:true, mode:'copy'
    output :
       set val(bambase),file(filedistall) into fig_all
-      file(outresume) into (stat_all, stat_all2)
-      file(outresume) into stat_all
+      set val(bambase),file(outresume) into (stat_all, stat_all2)
       set val(bambase),file(out) into stat_all_merge
    script :
      out=bambase+"_all.stat"
      outresume=bambase+"_all_resume.stat"
-     filedistall=bambase+"_all.svg"
+     filedistall=bambase+"_all.pdf"
       """
      merge_multires.py --listfile $bwalocal,$bwa,$bowtie,$bowtieloc --out $out
      ExtractAllele_V2.r --file $out --out $bambase"_all" --header $bambase --lheader NbRepetNewAl
       """
 }
 
-stat_all_col=stat_all.collect()
+stat_all_col=stat_all.flatMap{n->n[1]}.collect()
 process MergeStatAll{
     input :
         file(statmerge) from stat_all_col
@@ -353,7 +351,7 @@ process MergeStatAll{
       """
 }
 
-stat_bwa_col=stat_bwa.collect()
+stat_bwa_col=stat_bwa.flatMap{n->n[1]}.collect()
 process MergeStatBWA{
     input :
         file(statmerge) from stat_bwa_col
@@ -368,7 +366,7 @@ process MergeStatBWA{
       """
 }
 
-stat_bowtielocal_col=stat_bowtielocal.collect()
+stat_bowtielocal_col=stat_bowtielocal.flatMap{n->n[1]}.collect()
 process MergeStatBowtieLocal{
     input :
         file(statmerge) from stat_bowtielocal_col
@@ -384,7 +382,7 @@ process MergeStatBowtieLocal{
 }
 
 
-stat_bwalocal_col=stat_bwalocal.collect()
+stat_bwalocal_col=stat_bwalocal.flatMap{n->n[1]}.collect()
 process MergeStatBWALocal{
     input :
         file(statmerge) from stat_bwalocal_col
@@ -401,7 +399,7 @@ process MergeStatBWALocal{
 
 
 
-stat_bowtie_col=stat_bowtie.collect()
+stat_bowtie_col=stat_bowtie.flatMap{n->n[1]}.collect()
 process MergeStatBowtie{
     input :
         file(statmerge) from stat_bowtie_col
@@ -416,24 +414,51 @@ process MergeStatBowtie{
       """
 }
 
+list_bamfile_depth=Channel.fromPath(file(params.files_bam).readLines()).collect()
+listresbai=file(params.files_bam).readLines()
+i=0
+while (i < listresbai.size()){
+listresbai[i]=listresbai[i].replace('.bam','.bai')
+i++
+}
+list_baifile_depth=Channel.fromPath(listresbai).collect()
+
+process ComputeDepth{
+   input :
+      file(allbam) from list_bamfile_depth
+      file(allbai) from list_baifile_depth
+   publishDir "${params.out_dir}/depth/", overwrite:true, mode:'copy'
+   output :
+      file(out)
+   script :
+     out=params.out+".depth"
+     outpdf=params.out+"_depth.pdf"
+     range=params.chro+':'+(params.pos_begin-params.around_depth)+'-'+(params.pos_end+params.around_depth)
+     listfile=allbam.join(' ')
+     Head='Chro Pos '+allbam.join('\\t').replace('bam','')
+     """
+     echo -e \"$Head\" > $out
+     samtools depth -aa -r $range $listfile >> $out
+     plot_couv.r $out  ${params.pos_begin} ${params.pos_end} $outpdf
+     """
+}
+
+fig_merge_process=fig_bwa.join(fig_bwalocal).join(fig_bowtie).join(fig_bowtielocal).join(fig_all)
+stat_merge_process=stat_bwa2.join(stat_bwalocal2).join(stat_bowtie2).join(stat_bowtielocal2).join(stat_all2)
+report_ind=fig_merge_process.join(stat_merge_process)
+
 process DoReportInd{
    input :
-       set val(bambasebwa), file(figbwa) from fig_bwa 
-       file(stat) from stat_bwa2 
-       set val(bambasebwalocal), file(figbwalocal) from fig_bwalocal 
-       file(stat) from stat_bwalocal2 
-       set val(bambasebowtie), file(figbowtie) from fig_bowtie 
-       file(stat) from stat_bowtie2 
-       set val(bambasebowtielocal), file(figbowtielocal) from fig_bowtielocal 
-       file(stat) from stat_bowtielocal2 
-       set val(bambaseall), file(figall) from fig_all 
-       file(stat) from stat_bowtielocal2 
-       set val(bambaseall), file(figall) from fig_all 
-       file(stat) from stat_bowtielocal2 
+       set val(bambase), file(figbwa), file(figbwalocal), file(figbowtie), file(figbowtielocal), file(figall),  file(statbwa),file(statbwalocal),file(statbowtie),file(statbowtielocal) ,file(statall) from report_ind
+  publishDir "${params.out_dir}/report_ind", overwrite:true, mode:'copy'
+   output :
+     file("${bambasebwa}.tex")
+     file("${bambasebwa}.pdf")
    script :
      """
+     make_report_ind.py --out $bambase".tex" --order "all,bwa,bwalocal,bowtie2,bowtie2local" --indname $bambasebwa --figures $figall,$figbwa,$figbwalocal,$figbowtie,$figbowtielocal --filestat $statall,$statbwa,$statbwalocal,$statbowtie,$statbowtielocal
      """
-  
+
 }
 
 

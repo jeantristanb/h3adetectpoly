@@ -175,21 +175,24 @@ listheadernbrepet<-listheadernbrepet[nchar(listheadernbrepet)>0]
 
 Data<-read.table(FileI, header=T)
 header1="NbRepetI"
-svg(paste(Out,'.svg',sep=''),width = 7*2, height = 7)
+pdf(paste(Out,'.pdf',sep=''),width = 7*2, height = 7)
 par(mfrow=c(1,length(listheadernbrepet)))
 Cmt=1
 for(header1 in listheadernbrepet){
+if(header1=="NbRepetI")Main="Initial Alignment"
+else if(header1=="NbRepetNewAl")Main="Biopython Realigned"
+else  Main=""
 NbAllele<-GetAllele2(Data[,header1])
 ResumeNbAllele=NbAllele[['resume']]
 
 tbval=table(Data[,header1])
 if(nrow(Data)>0){
 if(ResumeNbAllele$Type==0){
-plot(as.integer(names(tbval)),unlist(tbval), type='h', ylim=range(0,max(tbval)), yaxt='n', lwd=4, xlab="Repetition Number", ylab='Observation number', main=paste('Inital :',Head), sub='No allele found')
+plot(as.integer(names(tbval)),unlist(tbval), type='h', ylim=range(0,max(tbval)), yaxt='n', lwd=4, xlab="Repetition Number", ylab='Observation number', main=paste(Main,Head), sub='No allele found')
 axis(2,at=seq(0, max(tbval),2), label=seq(0, max(tbval),2))
 }else if(ResumeNbAllele$Type==1){
 Sub=paste('No test Allele done. Homoz. Allele : ',ResumeNbAllele$A1)
-plot(as.integer(names(tbval)),unlist(tbval), type='h', ylim=range(0,max(tbval)), yaxt='n', lwd=4, xlab="Repetition Number", ylab='Observation number', main=paste('Inital :',Head), sub=Sub)
+plot(as.integer(names(tbval)),unlist(tbval), type='h', ylim=range(0,max(tbval)), yaxt='n', lwd=4, xlab="Repetition Number", ylab='Observation number', main=paste(Main,Head), sub=Sub)
 text(ResumeNbAllele$A1, ResumeNbAllele$NbA1+ ResumeNbAllele$NbA1, '*', cex=5, col='red')
 axis(2,at=seq(0, max(tbval),2), label=seq(0, max(tbval),2))
 }else if(ResumeNbAllele$Type==2){
@@ -197,7 +200,7 @@ Sub=paste('Test Allele done, Homoz Allele : ',ResumeNbAllele$A1)
 DistAll<-NbAllele$summres
 xran<-range(Data[,header1],  DistAll[,'Count'], na.rm=T)
 yran<-range(0,tbval, DistAll[,c('N1','N2','Nall')],na.rm=T);yran[2]=yran[2]+1
-plot(as.integer(names(tbval)),unlist(tbval), type='h', yaxt='n', lwd=4, xlab="Repetition Number", ylab='Observation number', main=paste('Inital :',Head), sub=Sub, xlim=xran, ylim=yran)
+plot(as.integer(names(tbval)),unlist(tbval), type='h', yaxt='n', lwd=4, xlab="Repetition Number", ylab='Observation number', main=paste(Main,Head), sub=Sub, xlim=xran, ylim=yran)
 lines(DistAll[,1],DistAll[,'Nall'], lwd=2)
 lines(DistAll[,1],DistAll[,'N1'], lwd=1, lty=2, col='red')
 lines(DistAll[,1],DistAll[,'N2'], lwd=1, lty=3, col='blue')
@@ -209,7 +212,7 @@ Sub=paste('Test Allele done, two models Allele : ',ResumeNbAllele$A1, ResumeNbAl
 DistAll<-NbAllele$summres
 xran<-range(Data[,header1],  DistAll[,'Count'], na.rm=T)
 yran<-range(0,tbval, DistAll[,c('N1','N2','Nall')],na.rm=T);yran[2]=yran[2]+1
-plot(as.integer(names(tbval)),unlist(tbval), type='h', yaxt='n', lwd=4, xlab="Repetition Number", ylab='Observation number', main=paste('Inital :',Head), sub=Sub, xlim=xran, ylim=yran)
+plot(as.integer(names(tbval)),unlist(tbval), type='h', yaxt='n', lwd=4, xlab="Repetition Number", ylab='Observation number', main=paste(Main,Head), sub=Sub, xlim=xran, ylim=yran)
 lines(DistAll[,1],DistAll[,'Nall'], lwd=1)
 lines(DistAll[,1],DistAll[,'N1'], lwd=2, lty=2, col='red')
 lines(DistAll[,1],DistAll[,'N2'], lwd=2, lty=3, col='blue')
