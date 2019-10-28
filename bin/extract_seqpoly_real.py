@@ -5,6 +5,27 @@ from Bio import pairwise2
 from Bio.pairwise2 import format_alignment
 
 
+ListeFlag=set(['I', 'M', 'D', 'N', 'S', 'H'])
+def GetInfoFlag(FlagSam, detail=False):
+   Chaine=""
+   Len=0
+   listflag=[]
+   listnbflag=[]
+   for x in FlagSam :
+      if x in ListeFlag :
+          if x!='I' and x!='S' and x!='H':
+              Len+=int(Chaine)
+          listnbflag.append(int(Chaine))
+          listflag.append(x)
+          Chaine=""
+      else :
+          Chaine+=x
+   if detail :
+      return (Len,listflag,listnbflag)
+   return Len
+
+
+
 
 
 def DoAlignment(SeqToCheck, Polyele, MinRep, MaxRep, LenAround):
@@ -34,6 +55,11 @@ def ReadUnMapped(flag) :
       return True
    return False
 
+def MateUnMapped(flag) :
+   if flag & 8 :
+      return True
+   return False
+
 def IsSecondPE(flag):
   if flag & 64 :
      return True
@@ -45,7 +71,7 @@ def IsSecondPE(flag):
 def parseArguments():
     parser = argparse.ArgumentParser(description='extract sequence of interrest in fasta file')
     parser.add_argument('--fasta',type=str,required=False, help="fasta file")
-    parser.add_argument('--sam',type=str,required=True, help="fasta file")
+    parser.add_argument('--sam',type=str,required=True, help="sam files")
     parser.add_argument('--out', type=str,help="out header",default="outseq", required=False)
     parser.add_argument('--minnbrepet', type=int,help="how many position around", required=False, default=0)
     parser.add_argument('--maxnbrepet', type=int,help="how many position around", required=False, default=100)
@@ -67,7 +93,7 @@ for line in readsam :
       continue
     splline=line.split('\t')
     FlagSam=int(splline[1])
-    if ReadUnMapped(FlagSam) :
+    if ReadUnMapped(FlagSam) or MateUnMapped(FlagSam) :
        continue
     Seq=splline[2].split('_')
     NbRep=int(Seq[0].replace('Nb',''))
@@ -75,9 +101,9 @@ for line in readsam :
     EndPoly=int(Seq[2])
     ###  positon in sequence 
     Cigar=splline[5]
-
+    (lenSeq,listflag,listnbflag)=GetInfoFlag(Cigar,True) 
     BegInSeq=int(splline[3])
-    EndInSeq=BegInSeq+len(splline[9])
+    EndInSeq=BegInSeq+lenSeq
     PeType="Pe1"
     if IsSecondPE(FlagSam) :
        PeType="Pe2"

@@ -27,7 +27,7 @@ params.bin_bwa='bwa'
 
 // files contain list of bam to analyseendfas  
 params.files_bam=''
-params.mem_req_samtools='10GB'
+params.mem_req_samtools='20GB'
 params.cpus_req_samtools=1
 params.cpus_req_al=1
 params.opt_bowtie="-N 1 -L 20 --rdg 5,5 --rfg 5,5"
@@ -139,6 +139,7 @@ process ExtractRegion{
 sam_all=sam_not_mapped.join(sam_region)
 process MergeSam{
    time params.big_time
+   memory params.mem_req_samtools
    input :
     set val(basenam), file(sam_unmapped), file(bam), file(sam_region) from sam_all
    output :
