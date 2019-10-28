@@ -55,6 +55,12 @@ def ReadUnMapped(flag) :
       return True
    return False
 
+def MateUnMapped(flag) :
+   if flag & 8 :
+      return True
+   return False
+
+
 def IsSecondPE(flag):
   if flag & 64 :
      return True
@@ -101,7 +107,7 @@ for line in readsam1 :
        PeType="Pe2"
     #print('sam1',splline[0], PeType, FlagSam, splline)
     if Balise:
-      dicseqbegin[splline[0]+PeType]=splline
+      dicseqbegin[splline[0]+PeType]=[splline,MateUnMapped(FlagSam)]
 
 dicseqend={}
 for line in readsam2 :
@@ -121,7 +127,7 @@ for line in readsam2 :
        PeType="Pe2"
     #print('sam2',splline[0], PeType, FlagSam, splline)
     if Balise :
-      dicseqend[splline[0]+PeType]=splline
+      dicseqend[splline[0]+PeType]=[splline,MateUnMapped(FlagSam)]
 
 
 Common=intersect(dicseqend.keys(), dicseqbegin.keys())
@@ -129,8 +135,11 @@ Write=open(args.out, 'w')
 Head=['SeqName','FlagSamBeg', 'PosInRefBeg','CigarBeg', 'FlagSamEnd', 'PosInRefEnd','CigarEnd', 'NbRepetI', 'ScoreNewAl','NbRepetNewAl','Seq']
 Write.write("\t".join(Head)+'\n')
 for PeName in Common :
-    pebegin=dicseqbegin[PeName]
-    peend=dicseqend[PeName]
+    pebegin=dicseqbegin[PeName][0]
+    peend=dicseqend[PeName][0]
+    ## case or none of other PE is aligned 
+    if dicseqbegin[PeName][1]==True and dicseqend[PeName][1]==True :
+        continue
     NbRep=(len(peend[9])-(GetInfoFlag(pebegin[5])+GetInfoFlag(peend[5])))/len(args.repet)
     if NbRep >= args.minnbrepet and NbRep<=args.maxnbrepet :
        NewAlignment=DoAlignment(peend[9], args.repet,args.minnbrepet,args.maxnbrepet, around)
