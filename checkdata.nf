@@ -95,7 +95,7 @@ process CheckRefSeq{
    script :
    out=params.out+'.statfasta'
    """
-   extract_seq.py  --fasta $filefasta --chro ${params.chro} --posbegin ${params.pos_begin} --posend ${params.pos_end} --rep ${params.polyrep}  --around_depth ${params.around_depth} --check --out  $out
+   extract_seq.py  --fasta $filefasta --chro ${params.chro} --posbegin ${params.pos_begin} --posend ${params.pos_end} --rep ${params.polyrep}  --around ${params.around_depth} --check --out  $out
    """
 }
 
