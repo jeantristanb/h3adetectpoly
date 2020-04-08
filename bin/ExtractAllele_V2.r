@@ -30,6 +30,7 @@ return(TabValI)
 GetAllele2<-function(x){
 GetFitDist<-function(All, law, method=NA, maxsd=1){
 getdnorm<-function(Observed, meanval, sdval){
+if(sdval==0)sdval=1*10**-2
 Dval<-dnorm(Observed,mean=meanval,sd=sdval)
 Dval[is.infinite(Dval)]<-1
 Pall<-Dval/sum(Dval)

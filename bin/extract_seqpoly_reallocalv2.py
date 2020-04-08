@@ -76,17 +76,25 @@ def parseArguments():
     parser.add_argument('--oldpos_poly', type=int,help="out header", required=True)
     parser.add_argument('--minnbrepet', type=int,help="how many position around", required=False, default=0)
     parser.add_argument('--maxnbrepet', type=int,help="how many position around", required=False, default=100)
-    parser.add_argument('--repet',type=str,required=False, help="fasta file")
+    parser.add_argument('--repet',type=str,required=False, help="")
+    #parser.add_argument('--stringence',type=str,required=False, help="stringence : 0 no, 1 yes", required=False, default=1)
     parser.add_argument('--nb_bp_threshold', type=int,help="out header", required=False, default=5)
     args = parser.parse_args()
     return args
 
+#def CheckFlagFirst(x, pos=0):
+#   return listflag[pos] in ['S','H','I']
 
 args=parseArguments()
 readsam1=open(args.sam_begin)
 readsam2=open(args.sam_end)
 around=args.nb_bp_threshold
 oldpospoly=args.oldpos_poly
+#if args.stringence==1 :
+# Stringenc=True
+# FctCheck=
+#else :
+# Stringenc=False
 
 dicseqbegin={}
 for line in readsam1 :
@@ -101,6 +109,7 @@ for line in readsam1 :
     Cigar=splline[5]
     (lenSeq,listflag,listnbflag)=GetInfoFlag(Cigar,True)
     EndInSeq=BegInSeq+lenSeq
+    ## check if insertion in end of sequence
     Balise=EndInSeq>=(oldpospoly-around) and listflag[len(listflag)-1] in ['S','H', 'I'] 
     PeType="Pe1"
     if IsSecondPE(FlagSam) :
@@ -121,6 +130,8 @@ for line in readsam2 :
     BegInSeq=int(splline[3])
     Cigar=splline[5]
     (lenSeq,listflag,listnbflag)=GetInfoFlag(Cigar,True)
+    ## we check if 
+    ## check if insertion in begin of sequence
     Balise=BegInSeq<=around and listflag[0] in ['S','H','I'] #and (listflag.count('S')+listflag.count('H'))==1 
     PeType="Pe1"
     if IsSecondPE(FlagSam) :
@@ -132,19 +143,27 @@ for line in readsam2 :
 
 Common=intersect(dicseqend.keys(), dicseqbegin.keys())
 Write=open(args.out, 'w')
-Head=['SeqName','FlagSamBeg', 'PosInRefBeg','CigarBeg', 'FlagSamEnd', 'PosInRefEnd','CigarEnd', 'NbRepetI', 'ScoreNewAl','NbRepetNewAl','Seq']
+Head=['SeqName','FlagSamBeg', 'PosInRefBeg','CigarBeg', 'FlagSamEnd', 'PosInRefEnd','CigarEnd', 'NbRepetI', 'ScoreNewAl','NbRepetNewAl','Seq', 'SeqRep', 'rep']
 Write.write("\t".join(Head)+'\n')
 for PeName in Common :
     pebegin=dicseqbegin[PeName][0]
     peend=dicseqend[PeName][0]
     ## case or none of other PE is aligned 
+    ## check if  PE is mapped
     if dicseqbegin[PeName][1]==True and dicseqend[PeName][1]==True :
         continue
-    NbRep=(len(peend[9])-(GetInfoFlag(pebegin[5])+GetInfoFlag(peend[5])))/len(args.repet)
-    if NbRep >= args.minnbrepet and NbRep<=args.maxnbrepet :
+    (lenSeqbeg,listflagbeg,listnbflagbeg)=GetInfoFlag(pebegin[5],True)
+    BegInIll=len(peend[9])-listnbflagbeg[len(listnbflagbeg)-1]
+    (lenSeqend,listflagend,listnbflagend)=GetInfoFlag(peend[5],True)
+    EndInIll=listnbflagend[0]
+    print(args.repet)
+    #NbRep=(len(peend[9])-(GetInfoFlag(pebegin[5])+GetInfoFlag(peend[5])))/len(args.repet)
+    if BegInIll<EndInIll  :
+       SeqRep=peend[9][(BegInIll-1):EndInIll]
+       NbRep=SeqRep.lower().count(args.repet.lower()) 
        NewAlignment=DoAlignment(peend[9], args.repet,args.minnbrepet,args.maxnbrepet, around)
        if NewAlignment[0]!="NA" :
-         res=[PeName,pebegin[1],pebegin[3],pebegin[5],peend[1],peend[3],peend[5],NbRep, NewAlignment[0],NewAlignment[1],peend[9]]
+         res=[PeName,pebegin[1],pebegin[3],pebegin[5],peend[1],peend[3],peend[5],NbRep, NewAlignment[0],NewAlignment[1],peend[9], SeqRep, args.repet]
          Write.write( "\t".join([str(x) for x in res])+'\n')
 Write.close()
 

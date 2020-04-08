@@ -35,6 +35,7 @@ params.pe_len=150
 
 params.out_dir='out'
 params.out='out'
+//params.stringence=0
 
 params.reffasta_file=''
 // chro of poly element
@@ -45,8 +46,9 @@ params.pos_end=-1
 params.polyrep=''
 params.around_depth=500
 //nb 
-params.around=0
+params.around=5
 params.around_al2=-1
+params.nb_bp_threshold_local=10
 //nb base pair to check around poly element
 params.nb_bp_threshold=5
 // Nb repetition of poly element to do
@@ -257,7 +259,7 @@ process ComputeStatBWALocal{
      outresume=bambase+"_bwalocal_resume.stat"
      filedistbwalocal=bambase+"_bwalocal.pdf"
      """
-     extract_seqpoly_reallocalv2.py --sam_begin $bwalocalbeg --sam_end $bwalocalend --out $out --oldpos_poly ${params.around_al2} --nb_bp_threshold ${params.nb_bp_threshold}  --repet ${params.polyrep} --minnbrepet ${params.reppoly_min} --maxnbrepet ${params.reppoly_max}
+     extract_seqpoly_reallocalv2.py --sam_begin $bwalocalbeg --sam_end $bwalocalend --out $out --oldpos_poly ${params.around_al2} --nb_bp_threshold ${params.nb_bp_threshold_local}  --repet ${params.polyrep} --minnbrepet ${params.reppoly_min} --maxnbrepet ${params.reppoly_max} 
      ExtractAllele_V2.r --file $out --out $bambase"_bwalocal" --header $bambase
      """
 }
@@ -277,7 +279,7 @@ process ComputeStatBowtieLocal{
       outresume=bambase+"_bowtielocal_resume.stat"
       filedistbowtielocal=bambase+"_bowtielocal.pdf"
        """
-       extract_seqpoly_reallocalv2.py --sam_begin $bowtielocalbeg --sam_end $bowtielocalend --out $out --oldpos_poly ${params.around_al2} --nb_bp_threshold ${params.nb_bp_threshold}  --repet ${params.polyrep} --minnbrepet ${params.reppoly_min} --maxnbrepet ${params.reppoly_max}
+       extract_seqpoly_reallocalv2.py --sam_begin $bowtielocalbeg --sam_end $bowtielocalend --out $out --oldpos_poly ${params.around_al2} --nb_bp_threshold ${params.nb_bp_threshold_local}  --repet ${params.polyrep} --minnbrepet ${params.reppoly_min} --maxnbrepet ${params.reppoly_max} 
      ExtractAllele_V2.r --file $out --out $bambase"_bowtielocal" --header $bambase
        """
 }
