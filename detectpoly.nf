@@ -115,7 +115,11 @@ list_bamfile_region=Channel.fromPath(file(params.files_bam).readLines())
 listresbai=file(params.files_bam).readLines()
 i=0
 while (i < listresbai.size()){
-listresbai[i]=listresbai[i].replace('.bam','.bai')
+filebam = file(listresbai[i])
+if (!filebam.exists()) error("File ${listresbai[i]} does not exist.")
+listresbai[i]=listresbai[i][0..listresbai[i].lastIndexOf('.')]+"bai"
+filebai = file(listresbai[i])
+if (!filebai.exists()) error("File ${listresbai[i]} does not exist.")
 i++
 }
 list_baifile_region=Channel.fromPath(listresbai)

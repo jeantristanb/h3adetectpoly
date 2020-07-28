@@ -72,7 +72,7 @@ args=parseArguments()
 
 OutHead=args.out
 chro=args.chro
-chro=chro.replace('chr','').replace('Chr','')
+#chro=chro.replace('chr','').replace('Chr','')
 posend=args.posend
 posbegin=args.posbegin
 around=args.around
